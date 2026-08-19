@@ -1,10 +1,12 @@
 "use client"
 
-import { useGetPosts } from "@/hooks/usePosts"
+import { useQuery } from "@tanstack/react-query"
+import api from "@/lib/api"
 import { usePostStore } from "@/store/usePostStore"
 import { Pagination } from "@/components/Pagination"
+import type { Post } from "@/types/post"
 
-const ITEMS_PER_PAGE = 9
+const LIMIT = 9
 
 function Loader() {
   return (
@@ -20,7 +22,21 @@ function Loader() {
 
 export default function PreviewPage() {
   const { currentPage, setCurrentPage } = usePostStore()
-  const { data: posts = [], isLoading, isError } = useGetPosts(currentPage, "publish")
+  const offset = (currentPage - 1) * LIMIT
+
+  // Fetch LIMIT+1 to detect whether a next page exists — avoids needing a total count
+  const { data, isLoading, isError } = useQuery<Post[]>({
+    queryKey: ["preview", currentPage],
+    queryFn: async () => {
+      const res = await api.get<Post[]>(`/article/${LIMIT + 1}/${offset}`, {
+        params: { status: "publish" },
+      })
+      return res.data ?? []
+    },
+  })
+
+  const hasNextPage = (data?.length ?? 0) > LIMIT
+  const posts = hasNextPage ? data!.slice(0, LIMIT) : (data ?? [])
 
   if (isLoading) return <Loader />
 
@@ -86,12 +102,8 @@ export default function PreviewPage() {
 
           <Pagination
             currentPage={currentPage}
-            totalItems={
-              posts.length === ITEMS_PER_PAGE
-                ? currentPage * ITEMS_PER_PAGE + 1
-                : (currentPage - 1) * ITEMS_PER_PAGE + posts.length
-            }
-            itemsPerPage={ITEMS_PER_PAGE}
+            hasPrevPage={currentPage > 1}
+            hasNextPage={hasNextPage}
             onPageChange={setCurrentPage}
           />
         </>

@@ -1,10 +1,15 @@
 "use client"
 
+import { useQuery } from "@tanstack/react-query"
+import api from "@/lib/api"
 import { usePostStore } from "@/store/usePostStore"
 import { PostTable } from "@/components/PostTable"
-import { useGetPosts, useUpdatePost } from "@/hooks/usePosts"
-import type { PostStatus } from "@/types/post"
+import { Pagination } from "@/components/Pagination"
+import { useUpdatePost } from "@/hooks/usePosts"
+import type { Post, PostStatus } from "@/types/post"
 import Link from "next/link"
+
+const LIMIT = 10
 
 const TAB_META: { value: PostStatus; label: string; dot: string }[] = [
   { value: "publish", label: "Published", dot: "bg-emerald-400" },
@@ -25,9 +30,23 @@ function Loader() {
 }
 
 export default function AllPostsPage() {
-  const { activeTab, setActiveTab, currentPage } = usePostStore()
-  const { data: posts = [], isLoading } = useGetPosts(currentPage, activeTab)
+  const { activeTab, setActiveTab, currentPage, setCurrentPage } = usePostStore()
+  const offset = (currentPage - 1) * LIMIT
   const updatePost = useUpdatePost()
+
+  // Fetch LIMIT+1 to detect next page — server filters by status
+  const { data, isLoading } = useQuery<Post[]>({
+    queryKey: ["posts", activeTab, currentPage],
+    queryFn: async () => {
+      const res = await api.get<Post[]>(`/article/${LIMIT + 1}/${offset}`, {
+        params: { status: activeTab },
+      })
+      return res.data ?? []
+    },
+  })
+
+  const hasNextPage = (data?.length ?? 0) > LIMIT
+  const posts = hasNextPage ? data!.slice(0, LIMIT) : (data ?? [])
 
   const handleTrash = (id: number) => {
     const post = posts.find((p) => p.id === id)
@@ -86,11 +105,19 @@ export default function AllPostsPage() {
       {isLoading ? (
         <Loader />
       ) : (
-        <PostTable
-          posts={posts}
-          onTrash={handleTrash}
-          isTrashLoading={updatePost.isPending}
-        />
+        <>
+          <PostTable
+            posts={posts}
+            onTrash={handleTrash}
+            isTrashLoading={updatePost.isPending}
+          />
+          <Pagination
+            currentPage={currentPage}
+            hasPrevPage={currentPage > 1}
+            hasNextPage={hasNextPage}
+            onPageChange={setCurrentPage}
+          />
+        </>
       )}
     </div>
   )

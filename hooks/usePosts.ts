@@ -9,10 +9,10 @@ export function useGetPosts(page: number, status?: PostStatus) {
   return useQuery<Post[]>({
     queryKey: ["posts", status ?? "all", page],
     queryFn: async () => {
-      const res = await api.get<Post[]>(`/article/${LIMIT}/${offset}`)
-      const data = res.data ?? []
-      if (status) return data.filter((p) => p.status === status)
-      return data
+      const params: Record<string, string> = {}
+      if (status) params.status = status
+      const res = await api.get<Post[]>(`/article/${LIMIT}/${offset}`, { params })
+      return res.data ?? []
     },
   })
 }
