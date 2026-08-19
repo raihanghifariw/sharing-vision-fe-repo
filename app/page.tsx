@@ -1,69 +1,56 @@
-import Image from "next/image";
+"use client"
 
-export default function Home() {
+import { useGetPosts } from "@/hooks/usePosts"
+import { usePostStore } from "@/store/usePostStore"
+import { Pagination } from "@/components/Pagination"
+import { Badge } from "@/components/ui/badge"
+
+const ITEMS_PER_PAGE = 9
+
+export default function PreviewPage() {
+  const { currentPage, setCurrentPage } = usePostStore()
+  const { data: posts = [], isLoading, isError } = useGetPosts(currentPage, "publish")
+
+  if (isLoading) {
+    return <p className="text-gray-500 text-center py-16">Memuat artikel...</p>
+  }
+
+  if (isError) {
+    return <p className="text-red-500 text-center py-16">Gagal memuat artikel. Pastikan backend berjalan.</p>
+  }
+
+  if (posts.length === 0) {
+    return <p className="text-gray-500 text-center py-16">Belum ada artikel yang dipublikasikan.</p>
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">Blog</h1>
+
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {posts.map((post) => (
+          <article
+            key={post.id}
+            className="border border-gray-200 rounded-lg p-5 hover:border-gray-400 transition-colors"
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+            <Badge variant="secondary" className="mb-2 text-xs">{post.category}</Badge>
+            <h2 className="font-semibold text-gray-900 mb-2 line-clamp-2">{post.title}</h2>
+            <p className="text-sm text-gray-500 line-clamp-3">{post.content}</p>
+            <p className="text-xs text-gray-400 mt-3">
+              {new Date(post.created_date).toLocaleDateString("id-ID", {
+                year: "numeric", month: "long", day: "numeric",
+              })}
+            </p>
+          </article>
+        ))}
+      </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalItems={posts.length === ITEMS_PER_PAGE ? currentPage * ITEMS_PER_PAGE + 1 : (currentPage - 1) * ITEMS_PER_PAGE + posts.length}
+        itemsPerPage={ITEMS_PER_PAGE}
+        onPageChange={setCurrentPage}
+      />
     </div>
-  );
+  )
 }
