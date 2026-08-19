@@ -3,54 +3,99 @@
 import { useGetPosts } from "@/hooks/usePosts"
 import { usePostStore } from "@/store/usePostStore"
 import { Pagination } from "@/components/Pagination"
-import { Badge } from "@/components/ui/badge"
 
 const ITEMS_PER_PAGE = 9
+
+function Loader() {
+  return (
+    <div className="flex items-center justify-center py-32">
+      <div className="flex gap-2">
+        <span className="w-2 h-2 rounded-full bg-zinc-500 animate-pulse [animation-delay:0ms]" />
+        <span className="w-2 h-2 rounded-full bg-zinc-500 animate-pulse [animation-delay:160ms]" />
+        <span className="w-2 h-2 rounded-full bg-zinc-500 animate-pulse [animation-delay:320ms]" />
+      </div>
+    </div>
+  )
+}
 
 export default function PreviewPage() {
   const { currentPage, setCurrentPage } = usePostStore()
   const { data: posts = [], isLoading, isError } = useGetPosts(currentPage, "publish")
 
-  if (isLoading) {
-    return <p className="text-gray-500 text-center py-16">Memuat artikel...</p>
-  }
+  if (isLoading) return <Loader />
 
   if (isError) {
-    return <p className="text-red-500 text-center py-16">Gagal memuat artikel. Pastikan backend berjalan.</p>
-  }
-
-  if (posts.length === 0) {
-    return <p className="text-gray-500 text-center py-16">Belum ada artikel yang dipublikasikan.</p>
+    return (
+      <div className="py-32 text-center">
+        <p className="text-sm text-zinc-400">Backend tidak dapat dijangkau.</p>
+      </div>
+    )
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Blog</h1>
-
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {posts.map((post) => (
-          <article
-            key={post.id}
-            className="border border-gray-200 rounded-lg p-5 hover:border-gray-400 transition-colors"
-          >
-            <Badge variant="secondary" className="mb-2 text-xs">{post.category}</Badge>
-            <h2 className="font-semibold text-gray-900 mb-2 line-clamp-2">{post.title}</h2>
-            <p className="text-sm text-gray-500 line-clamp-3">{post.content}</p>
-            <p className="text-xs text-gray-400 mt-3">
-              {new Date(post.created_date).toLocaleDateString("id-ID", {
-                year: "numeric", month: "long", day: "numeric",
-              })}
-            </p>
-          </article>
-        ))}
+      {/* Page heading */}
+      <div className="mb-10">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-zinc-700 bg-zinc-800/60 text-xs font-medium text-zinc-300 mb-5">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+          Published articles
+        </div>
+        <h1 className="text-3xl font-bold tracking-tight text-gradient">Latest Articles</h1>
       </div>
 
-      <Pagination
-        currentPage={currentPage}
-        totalItems={posts.length === ITEMS_PER_PAGE ? currentPage * ITEMS_PER_PAGE + 1 : (currentPage - 1) * ITEMS_PER_PAGE + posts.length}
-        itemsPerPage={ITEMS_PER_PAGE}
-        onPageChange={setCurrentPage}
-      />
+      {posts.length === 0 ? (
+        <div className="py-24 text-center rounded-xl border border-dashed border-zinc-700">
+          <p className="text-sm font-medium text-zinc-400">Belum ada artikel yang dipublikasikan.</p>
+        </div>
+      ) : (
+        <>
+          {/* Article list */}
+          <div className="rounded-xl border border-zinc-700 overflow-hidden divide-y divide-zinc-700/60">
+            {posts.map((post) => (
+              <article
+                key={post.id}
+                className="group bg-zinc-900/40 hover:bg-zinc-800/60 transition-colors px-5 py-4"
+              >
+                <div className="flex items-center justify-between gap-4">
+                  {/* Title */}
+                  <h2 className="text-sm font-semibold text-zinc-100 group-hover:text-white transition-colors line-clamp-1 flex-1">
+                    {post.title}
+                  </h2>
+                  {/* Category badge */}
+                  <span className="shrink-0 px-2.5 py-0.5 rounded-full border border-zinc-600 bg-zinc-800 text-[11px] font-medium text-zinc-300 uppercase tracking-wide">
+                    {post.category}
+                  </span>
+                </div>
+
+                {/* Excerpt */}
+                <p className="mt-1.5 text-sm text-zinc-400 line-clamp-2 leading-relaxed">
+                  {post.content}
+                </p>
+
+                {/* Date — suppress hydration warning; locale output differs server vs client */}
+                <p className="mt-2 text-xs text-zinc-500" suppressHydrationWarning>
+                  {new Date(post.created_date).toLocaleDateString("id-ID", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </p>
+              </article>
+            ))}
+          </div>
+
+          <Pagination
+            currentPage={currentPage}
+            totalItems={
+              posts.length === ITEMS_PER_PAGE
+                ? currentPage * ITEMS_PER_PAGE + 1
+                : (currentPage - 1) * ITEMS_PER_PAGE + posts.length
+            }
+            itemsPerPage={ITEMS_PER_PAGE}
+            onPageChange={setCurrentPage}
+          />
+        </>
+      )}
     </div>
   )
 }

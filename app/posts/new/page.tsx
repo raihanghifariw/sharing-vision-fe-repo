@@ -17,11 +17,13 @@ export default function AddNewPage() {
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Add New Article</h1>
-      <div className="max-w-2xl">
-        <PostForm onSubmit={handleSubmit} isLoading={createPost.isPending} />
+    <div className="max-w-2xl">
+      <div className="mb-8">
+        <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-2">New Article</p>
+        <h1 className="text-2xl font-bold tracking-tight text-gradient">Write something</h1>
       </div>
+
+      <PostForm onSubmit={handleSubmit} isLoading={createPost.isPending} />
     </div>
   )
 }

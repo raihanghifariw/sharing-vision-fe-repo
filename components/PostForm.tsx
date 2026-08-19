@@ -31,9 +31,7 @@ export function PostForm({ defaultValues, onSubmit, isLoading }: PostFormProps) 
     defaultValues: defaultValues ?? { title: "", content: "", category: "" },
   })
 
-  const handleClick = (status: PostStatus) => {
-    setPendingStatus(status)
-  }
+  const handleClick = (status: PostStatus) => setPendingStatus(status)
 
   const processSubmit = (data: FormValues) => {
     if (!pendingStatus) return
@@ -42,61 +40,101 @@ export function PostForm({ defaultValues, onSubmit, isLoading }: PostFormProps) 
   }
 
   return (
-    <form onSubmit={handleSubmit(processSubmit)} className="space-y-5">
-      <div className="space-y-1">
-        <Label htmlFor="title">Title</Label>
+    <form onSubmit={handleSubmit(processSubmit)} className="space-y-6">
+
+      {/* Title */}
+      <div className="space-y-2">
+        <Label htmlFor="title" className="text-sm font-semibold text-zinc-200">
+          Title
+        </Label>
         <Input
           id="title"
-          placeholder="Masukkan judul artikel (min. 20 karakter)"
+          placeholder="Judul artikel (min. 20 karakter)"
+          className="h-11 bg-zinc-900 border-zinc-700 text-zinc-100 placeholder:text-zinc-500
+            focus-visible:border-zinc-500 focus-visible:ring-1 focus-visible:ring-zinc-500 text-sm"
           {...register("title")}
         />
         {errors.title && (
-          <p className="text-xs text-red-500">{errors.title.message}</p>
+          <p className="text-xs font-medium text-red-400 flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
+            {errors.title.message}
+          </p>
         )}
       </div>
 
-      <div className="space-y-1">
-        <Label htmlFor="category">Category</Label>
+      {/* Category */}
+      <div className="space-y-2">
+        <Label htmlFor="category" className="text-sm font-semibold text-zinc-200">
+          Category
+        </Label>
         <Input
           id="category"
-          placeholder="Masukkan kategori (min. 3 karakter)"
+          placeholder="Kategori (min. 3 karakter)"
+          className="h-11 bg-zinc-900 border-zinc-700 text-zinc-100 placeholder:text-zinc-500
+            focus-visible:border-zinc-500 focus-visible:ring-1 focus-visible:ring-zinc-500 text-sm"
           {...register("category")}
         />
         {errors.category && (
-          <p className="text-xs text-red-500">{errors.category.message}</p>
+          <p className="text-xs font-medium text-red-400 flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
+            {errors.category.message}
+          </p>
         )}
       </div>
 
-      <div className="space-y-1">
-        <Label htmlFor="content">Content</Label>
+      {/* Content */}
+      <div className="space-y-2">
+        <Label htmlFor="content" className="text-sm font-semibold text-zinc-200">
+          Content
+        </Label>
         <Textarea
           id="content"
           placeholder="Tulis konten artikel (min. 200 karakter)"
-          rows={8}
+          rows={10}
+          className="bg-zinc-900 border-zinc-700 text-zinc-100 placeholder:text-zinc-500
+            focus-visible:border-zinc-500 focus-visible:ring-1 focus-visible:ring-zinc-500
+            text-sm resize-none leading-relaxed"
           {...register("content")}
         />
         {errors.content && (
-          <p className="text-xs text-red-500">{errors.content.message}</p>
+          <p className="text-xs font-medium text-red-400 flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
+            {errors.content.message}
+          </p>
         )}
       </div>
 
-      <div className="flex gap-3">
+      {/* Actions */}
+      <div className="border-t border-zinc-800 pt-5 flex items-center gap-3">
         <Button
           type="submit"
           disabled={isLoading}
           onClick={() => handleClick("publish")}
+          className="px-6 h-10 bg-zinc-100 text-zinc-900 font-semibold text-sm hover:bg-white rounded-lg transition-colors"
         >
-          {isLoading && pendingStatus === "publish" ? "Saving..." : "Publish"}
+          {isLoading && pendingStatus === "publish" ? (
+            <span className="flex items-center gap-2">
+              <span className="w-3.5 h-3.5 border-2 border-zinc-400 border-t-zinc-900 rounded-full animate-spin" />
+              Saving...
+            </span>
+          ) : "Publish"}
         </Button>
+
         <Button
           type="submit"
-          variant="outline"
           disabled={isLoading}
           onClick={() => handleClick("draft")}
+          className="px-6 h-10 bg-zinc-800 border border-zinc-600 text-zinc-200 font-semibold text-sm hover:bg-zinc-700 hover:text-white rounded-lg transition-colors"
         >
-          {isLoading && pendingStatus === "draft" ? "Saving..." : "Draft"}
+          {isLoading && pendingStatus === "draft" ? (
+            <span className="flex items-center gap-2">
+              <span className="w-3.5 h-3.5 border-2 border-zinc-500 border-t-zinc-200 rounded-full animate-spin" />
+              Saving...
+            </span>
+          ) : "Save as Draft"}
         </Button>
       </div>
+
     </form>
   )
 }
